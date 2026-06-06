@@ -1,18 +1,24 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, collection, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// Global Environment Variable Passwords
-const CHOSEN_ACCESS_CODE = "FAMILY2026"; 
+// System Cryptography Tokens
+const CHOSEN_ACCESS_CODE = "FAMILY2026";
 
-// 32 Teams Pool Array
-const WORLD_CUP_TEAMS = [
-    "Argentina", "France", "England", "Brazil", "Spain", "Portugal", "Netherlands", "Belgium",
-    "Germany", "Italy", "Croatia", "Morocco", "Uruguay", "Colombia", "USA", "Mexico",
-    "Senegal", "Japan", "South Korea", "Iran", "Denmark", "Switzerland", "Ukraine", "Poland",
-    "Sweden", "Austria", "Nigeria", "Ivory Coast", "Egypt", "Australia", "Saudi Arabia", "Canada"
-];
+// Extended Database Structure mapping Countries to ISO codes for FlagCDN integration
+const MASTER_TEAMS_POOL = {
+    "Argentina": "ar", "France": "fr", "England": "gb", "Brazil": "br", 
+    "Spain": "es", "Portugal": "pt", "Netherlands": "nl", "Belgium": "be",
+    "Germany": "de", "Italy": "it", "Croatia": "hr", "Morocco": "ma", 
+    "Uruguay": "uy", "Colombia": "co", "USA": "us", "Mexico": "mx",
+    "Senegal": "sn", "Japan": "jp", "South Korea": "kr", "Iran": "ir", 
+    "Denmark": "dk", "Switzerland": "ch", "Ukraine": "ua", "Poland": "pl",
+    "Sweden": "se", "Austria": "at", "Nigeria": "ng", "Ivory Coast": "ci", 
+    "Egypt": "eg", "Australia": "au", "Saudi Arabia": "sa", "Canada": "ca"
+};
 
-// Firebase Web SDK Pipeline Credentials
+const TEAM_NAMES = Object.keys(MASTER_TEAMS_POOL);
+
+// Core configuration payload link
 const firebaseConfig = {
     apiKey: "AIzaSyDrNntF6albNaqPLp5PhJ48cSFMJ8KQhZY",
     authDomain: "world-cup-d01ef.firebaseapp.com",
@@ -23,16 +29,15 @@ const firebaseConfig = {
     measurementId: "G-Z5NRSG3QK0"
 };
 
-// Initialize Modules
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Application Execution States
-let currentStage = "gate-auth-code"; 
-let localUserSessionName = "";
-let registeredClaimsData = {};
+let authWorkflowStage = "gate-auth-code";
+let userSessionIdentity = "";
+let remoteClaimsState = {};
+let fixturesMasterCache = [];
 
-// Cache DOM elements
+// DOM References
 const gateScreen = document.getElementById("gate-screen");
 const appScreen = document.getElementById("app-screen");
 const accessCodeInput = document.getElementById("access-code");
@@ -40,248 +45,258 @@ const userNameInput = document.getElementById("user-name");
 const btnGate = document.getElementById("btn-gate");
 const userDisplay = document.getElementById("user-display");
 
-// Step Engine Authentication Gate 
+// Parallax Mobile Gyro Mechanical Physics Emulator
+const parallaxElement = document.getElementById("picker-zone");
+if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission !== 'function') {
+    window.addEventListener("deviceorientation", handleGyroscopeMovement);
+} else {
+    // Desktop Fallback Mouse Interceptor
+    document.addEventListener("mousemove", (e) => {
+        const cx = window.innerWidth / 2;
+        const cy = window.innerHeight / 2;
+        const rx = (cy - e.clientY) / 15;
+        const ry = (e.clientX - cx) / 15;
+        parallaxElement.style.setProperty("--rx", `${rx}deg`);
+        parallaxElement.style.setProperty("--ry", `${ry}deg`);
+    });
+}
+
+function handleGyroscopeMovement(e) {
+    const rx = Math.min(Math.max(e.beta - 45, -20), 20) / 1.5;
+    const ry = Math.min(Math.max(e.gamma, -20), 20) / 1.5;
+    parallaxElement.style.setProperty("--rx", `${rx}deg`);
+    parallaxElement.style.setProperty("--ry", `${ry}deg`);
+}
+
+// Security Gate Logical Processing Flow
 btnGate.addEventListener("click", () => {
-    if (currentStage === "gate-auth-code") {
-        if (accessCodeInput.value.trim() === CHOSEN_ACCESS_CODE) {
+    if (authWorkflowStage === "gate-auth-code") {
+        if (accessCodeInput.value.trim().toUpperCase() === CHOSEN_ACCESS_CODE) {
             accessCodeInput.classList.add("hidden");
             userNameInput.classList.remove("hidden");
             userNameInput.focus();
-            btnGate.textContent = "Confirm Identity & Enter";
-            currentStage = "gate-auth-name";
+            btnGate.textContent = "Confirm Identity Entry";
+            authWorkflowStage = "gate-auth-name";
         } else {
-            alert("Incorrect access token code. Try again.");
+            alert("Security failure: Validation token invalid.");
             accessCodeInput.value = "";
         }
-    } else if (currentStage === "gate-auth-name") {
-        const inputName = userNameInput.value.trim();
-        if (inputName.length < 2) {
-            alert("Please input a recognizable family name.");
-            return;
-        }
-        localUserSessionName = inputName;
-        localStorage.setItem("wc_user_name", localUserSessionName);
-        initializeAppInterface();
+    } else if (authWorkflowStage === "gate-auth-name") {
+        const rawName = userNameInput.value.trim();
+        if (rawName.length < 2) return;
+        userSessionIdentity = rawName;
+        localStorage.setItem("wc_user_identity_v2", userSessionIdentity);
+        executeSystemActivation();
     }
 });
 
-// Auto login if already validated inside memory architecture
-if(localStorage.getItem("wc_user_name")) {
-    localUserSessionName = localStorage.getItem("wc_user_name");
-    // Speed directly into app screen bounds
-    setTimeout(() => { initializeAppInterface(); }, 400);
+if (localStorage.getItem("wc_user_identity_v2")) {
+    userSessionIdentity = localStorage.getItem("wc_user_identity_v2");
+    setTimeout(() => { executeSystemActivation(); }, 300);
 }
 
-function initializeAppInterface() {
+function executeSystemActivation() {
     gateScreen.classList.add("opacity-0", "pointer-events-none");
     appScreen.classList.remove("hidden");
-    userDisplay.textContent = `Hub Driver: ${localUserSessionName}`;
+    userDisplay.textContent = `Driver: ${userSessionIdentity}`;
     
-    // Connect Live Sync Listeners
-    syncClaimsEngine();
-    syncFixturesEngine();
+    // Mount Cloud Listeners
+    syncClaimsPipeline();
+    syncFixturesPipeline();
 }
 
-// Tab Switching Controller Engine
+// Tab Deck Switching Core Loop Controller
 document.querySelectorAll(".nav-tab").forEach(tab => {
     tab.addEventListener("click", (e) => {
-        const targetBtn = e.currentTarget;
+        const currentBtn = e.currentTarget;
         document.querySelectorAll(".nav-tab").forEach(b => b.classList.remove("active"));
         document.querySelectorAll(".app-view").forEach(v => v.classList.add("hidden"));
         
-        targetBtn.classList.add("active");
-        document.getElementById(targetBtn.dataset.target).classList.remove("hidden");
-        document.getElementById("header-title").textContent = targetBtn.dataset.title;
+        currentBtn.classList.add("active");
+        document.getElementById(currentBtn.dataset.target).classList.remove("hidden");
+        document.getElementById("header-title").textContent = currentBtn.dataset.title;
     });
 });
 
-// Real-Time Firebase Sync for Faction Claims
-function syncClaimsEngine() {
+// Real-Time Listener: Claims sync
+function syncClaimsPipeline() {
     onSnapshot(collection(db, "family_claims"), (snapshot) => {
-        registeredClaimsData = {};
+        remoteClaimsState = {};
         snapshot.forEach(doc => {
-            registeredClaimsData[doc.id] = doc.data().claimedBy;
+            remoteClaimsState[doc.id] = doc.data().claimedBy;
         });
-        
-        renderClaimsBoard();
-        evaluateUserClaimState();
+        renderRosterInterface();
+        evaluateSessionLockState();
     });
 }
 
-function renderClaimsBoard() {
-    const listContainer = document.getElementById("claims-list");
-    listContainer.innerHTML = "";
+function renderRosterInterface() {
+    const container = document.getElementById("claims-list");
+    container.innerHTML = "";
     
-    WORLD_CUP_TEAMS.forEach(team => {
-        const claimer = registeredClaimsData[team];
-        const row = document.createElement("div");
-        row.className = `glass-panel px-4 py-3.5 rounded-2xl flex justify-between items-center transition-all ${claimer ? 'border-indigo-500/10 bg-indigo-950/5 opacity-60' : 'border-white/5'}`;
+    TEAM_NAMES.forEach(team => {
+        const handler = remoteClaimsState[team];
+        const flagCode = MASTER_TEAMS_POOL[team];
+        const node = document.createElement("div");
         
-        row.innerHTML = `
-            <span class="font-bold text-sm tracking-wide ${claimer ? 'text-slate-400' : 'text-white'}">${team}</span>
-            <span class="text-xs px-2.5 py-1 rounded-lg font-mono tracking-wider uppercase font-bold ${claimer ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'bg-teal-500/10 text-teal-400 border border-teal-500/20'}">
-                ${claimer ? claimer : 'Available'}
+        node.className = `glass-panel px-4 py-3 rounded-2xl flex justify-between items-center transition-all ${handler ? 'border-white/5 bg-white/[0.01] opacity-40' : 'border-white/10'}`;
+        node.innerHTML = `
+            <div class="flex items-center space-x-3">
+                <img src="https://flagcdn.com/w40/${flagCode}.png" class="w-7 h-5 rounded object-cover shadow-sm" alt="">
+                <span class="font-bold text-sm ${handler ? 'text-slate-400 line-through' : 'text-white'}">${team}</span>
+            </div>
+            <span class="text-[10px] font-bold px-3 py-1 rounded-xl font-mono tracking-wider ${handler ? 'bg-indigo-500/10 text-indigo-400' : 'bg-amber-500/10 text-amber-400'}">
+                ${handler ? handler.toUpperCase() : 'VACANT'}
             </span>
         `;
-        listContainer.appendChild(row);
+        container.appendChild(node);
     });
 }
 
-function evaluateUserClaimState() {
-    let ownedTeam = null;
-    for (const [team, person] of Object.entries(registeredClaimsData)) {
-        if (person.toLowerCase() === localUserSessionName.toLowerCase()) {
-            ownedTeam = team;
+function evaluateSessionLockState() {
+    let claimedFaction = null;
+    for (const [team, user] of Object.entries(remoteClaimsState)) {
+        if (user.toLowerCase() === userSessionIdentity.toLowerCase()) {
+            claimedFaction = team;
             break;
         }
     }
     
-    const pickerZone = document.getElementById("picker-zone");
-    const lockedZone = document.getElementById("locked-zone");
+    const pZone = document.getElementById("picker-zone");
+    const lZone = document.getElementById("locked-zone");
     
-    if (ownedTeam) {
-        pickerZone.classList.add("hidden");
-        lockedZone.classList.remove("hidden");
-        document.getElementById("my-locked-team").textContent = ownedTeam;
+    if (claimedFaction) {
+        pZone.classList.add("hidden");
+        lZone.classList.remove("hidden");
+        document.getElementById("my-locked-team").textContent = claimedFaction.toUpperCase();
+        document.getElementById("my-locked-flag").style.backgroundImage = `url('https://flagcdn.com/w80/${MASTER_TEAMS_POOL[claimedFaction]}.png')`;
+        document.getElementById("my-locked-flag").style.backgroundSize = "cover";
         
-        // Populate Personal Progress Dashboards
         document.getElementById("no-team-assigned").classList.add("hidden");
-        const dash = document.getElementById("myteam-dashboard");
-        dash.classList.remove("hidden");
-        document.getElementById("dashboard-team-name").textContent = ownedTeam;
-        filterPersonalFixtures(ownedTeam);
+        document.getElementById("myteam-dashboard").classList.remove("hidden");
+        document.getElementById("dashboard-team-name").textContent = claimedFaction.toUpperCase();
+        document.getElementById("dash-flag").style.backgroundImage = `url('https://flagcdn.com/w160/${MASTER_TEAMS_POOL[claimedFaction]}.png')`;
+        document.getElementById("dash-flag").style.backgroundSize = "cover";
+        
+        filterPersonalFixtures(claimedFaction);
     } else {
-        pickerZone.classList.remove("hidden");
-        lockedZone.classList.add("hidden");
+        pZone.classList.remove("hidden");
+        lZone.classList.add("hidden");
     }
 }
 
-// Randomizer Slot Machine Mechanical Drawer Engine
+// High Fidelity Random Spinner Engine Logic
 const btnDraw = document.getElementById("btn-draw");
 const pickerDisplay = document.getElementById("picker-display");
+const flagDisplay = document.getElementById("flag-display");
 const pickerSub = document.getElementById("picker-sub");
 
 btnDraw.addEventListener("click", () => {
-    // Collect non-assigned factions
-    const unallocated = WORLD_CUP_TEAMS.filter(t => !registeredClaimsData[t]);
-    
-    if (unallocated.length === 0) {
-        alert("Fatal Error: No squads left inside pool allocation.");
-        return;
-    }
+    const unallocated = TEAM_NAMES.filter(t => !remoteClaimsState[t]);
+    if (unallocated.length === 0) return alert("All teams claimed!");
     
     btnDraw.disabled = true;
-    btnDraw.classList.add("opacity-40");
+    btnDraw.classList.add("opacity-30");
     pickerDisplay.classList.add("blur-roll");
-    pickerSub.textContent = "Spinning Reel Pipeline...";
+    flagDisplay.classList.remove("hidden");
     
-    let iterations = 0;
-    const interval = setInterval(() => {
-        const dummyIndex = Math.floor(Math.random() * unallocated.length);
-        pickerDisplay.textContent = unallocated[dummyIndex].toUpperCase();
-        iterations++;
+    let spinCounts = 0;
+    const mechanicalInterval = setInterval(() => {
+        const temporaryTeam = unallocated[Math.floor(Math.random() * unallocated.length)];
+        pickerDisplay.textContent = temporaryTeam.toUpperCase();
+        flagDisplay.style.backgroundImage = `url('https://flagcdn.com/w80/${MASTER_TEAMS_POOL[temporaryTeam]}.png')`;
+        flagDisplay.style.backgroundSize = "cover";
+        spinCounts++;
         
-        if (iterations > 15) {
-            clearInterval(interval);
-            
-            // Finalize targeted calculation selection
-            const ultimateIndex = Math.floor(Math.random() * unallocated.length);
-            const finalSelection = unallocated[ultimateIndex];
+        if (spinCounts > 20) {
+            clearInterval(mechanicalInterval);
+            const selectionTarget = unallocated[Math.floor(Math.random() * unallocated.length)];
             
             pickerDisplay.classList.remove("blur-roll");
-            pickerDisplay.textContent = finalSelection.toUpperCase();
-            pickerDisplay.className = "text-3xl font-black tracking-wide text-teal-400";
-            pickerSub.textContent = "Writing Matrix Node...";
+            pickerDisplay.textContent = selectionTarget.toUpperCase();
+            pickerDisplay.className = "text-4xl font-black tracking-tight text-amber-400 scale-105 transition-all";
+            pickerSub.textContent = "LOCKING DATABASE ENTRY...";
             
-            // Commit to Firebase async to securely establish dynamic registration lock out
-            setDoc(doc(db, "family_claims", finalSelection), {
-                claimedBy: localUserSessionName,
+            setDoc(doc(db, "family_claims", selectionTarget), {
+                claimedBy: userSessionIdentity,
                 timestamp: new Date().toISOString()
             }).then(() => {
                 btnDraw.disabled = false;
-                btnDraw.classList.remove("opacity-40");
-            }).catch(err => {
-                alert("Database concurrency crash: Try spinning process again.");
-                btnDraw.disabled = false;
+                btnDraw.classList.remove("opacity-30");
             });
         }
-    }, 120);
+    }, 90);
 });
 
-// Dynamic Fixtures Sync Layer 
-let mockFixturesMasterDatabase = [];
-
-function syncFixturesEngine() {
-    // Real World Cup Matches mapping pipeline structure array 
+// Dynamic Fixtures Core Framework Database Fallback Sync
+function syncFixturesPipeline() {
     onSnapshot(collection(db, "worldcup_fixtures"), (snapshot) => {
-        mockFixturesMasterDatabase = [];
-        snapshot.forEach(doc => {
-            mockFixturesMasterDatabase.push(doc.data());
-        });
+        fixturesMasterCache = [];
+        snapshot.forEach(doc => fixturesMasterCache.push(doc.data()));
         
-        // If your database cluster returns blank values, fallback to generic structural defaults:
-        if(mockFixturesMasterDatabase.length === 0) {
-            mockFixturesMasterDatabase = [
-                { stage: "Group Stage", homeTeam: "Argentina", awayTeam: "Canada", homeScore: 2, awayScore: 0, date: "June 15" },
-                { stage: "Group Stage", homeTeam: "France", awayTeam: "Poland", homeScore: 1, awayScore: 1, date: "June 16" },
-                { stage: "Group Stage", homeTeam: "England", awayTeam: "USA", homeScore: 3, awayScore: 1, date: "June 17" },
-                { stage: "Group Stage", homeTeam: "Brazil", awayTeam: "Japan", homeScore: 0, awayScore: 0, date: "June 18" }
+        if (fixturesMasterCache.length === 0) {
+            // Built-In Official Match Template
+            fixturesMasterCache = [
+                { stage: "Group A", homeTeam: "Mexico", awayTeam: "USA", homeScore: 2, awayScore: 1, date: "June 11" },
+                { stage: "Group B", homeTeam: "England", awayTeam: "Canada", homeScore: 3, awayScore: 0, date: "June 12" },
+                { stage: "Group C", homeTeam: "Argentina", awayTeam: "Sweden", homeScore: 1, awayScore: 0, date: "June 12" },
+                { stage: "Group D", homeTeam: "France", awayTeam: "Japan", homeScore: 2, awayScore: 2, date: "June 13" },
+                { stage: "Group E", homeTeam: "Brazil", awayTeam: "Morocco", homeScore: 0, awayScore: 1, date: "June 14" },
+                { stage: "Group F", homeTeam: "Spain", awayTeam: "Colombia", homeScore: 4, awayScore: 2, date: "June 15" }
             ];
         }
-        
-        renderAllFixturesList();
-        
-        // re-evaluate personal panel filter properties if needed
-        let ownedTeam = null;
-        for (const [team, person] of Object.entries(registeredClaimsData)) {
-            if (person.toLowerCase() === localUserSessionName.toLowerCase()) { ownedTeam = team; break; }
-        }
-        if(ownedTeam) filterPersonalFixtures(ownedTeam);
+        renderAllFixtures();
     });
 }
 
-function renderAllFixturesList() {
+function renderAllFixtures() {
     const list = document.getElementById("fixtures-list");
     list.innerHTML = "";
-    
-    mockFixturesMasterDatabase.forEach(match => {
-        list.appendChild(createFixtureCardDOMElement(match));
-    });
+    fixturesMasterCache.forEach(match => list.appendChild(generateMatchCardDOMNode(match)));
 }
 
-function filterPersonalFixtures(teamName) {
+function filterPersonalFixtures(targetTeam) {
     const list = document.getElementById("my-fixtures-list");
     list.innerHTML = "";
-    
-    const userMatches = mockFixturesMasterDatabase.filter(m => 
-        m.homeTeam.toLowerCase() === teamName.toLowerCase() || 
-        m.awayTeam.toLowerCase() === teamName.toLowerCase()
+    const filtered = fixturesMasterCache.filter(m => 
+        m.homeTeam.toLowerCase() === targetTeam.toLowerCase() || 
+        m.awayTeam.toLowerCase() === targetTeam.toLowerCase()
     );
-    
-    if(userMatches.length === 0) {
-        list.innerHTML = `<div class="text-slate-500 text-xs py-4 text-center">No matches recorded for your team asset pool yet.</div>`;
+    if(filtered.length === 0) {
+        list.innerHTML = `<div class="text-slate-500 text-xs py-6 text-center">No structural logs recorded yet.</div>`;
         return;
     }
-    
-    userMatches.forEach(match => {
-        list.appendChild(createFixtureCardDOMElement(match));
-    });
+    filtered.forEach(match => list.appendChild(generateMatchCardDOMNode(match)));
 }
 
-function createFixtureCardDOMElement(match) {
-    const card = document.createElement("div");
-    card.className = "glass-panel p-4 rounded-2xl space-y-3";
-    card.innerHTML = `
-        <div class="flex justify-between items-center text-[10px] tracking-wider uppercase font-bold text-slate-400">
-            <span class="bg-white/5 border border-white/5 px-2 py-0.5 rounded-md">${match.stage}</span>
-            <span class="font-mono text-slate-500">${match.date || 'TBD'}</span>
+function generateMatchCardDOMNode(match) {
+    const el = document.createElement("div");
+    el.className = "glass-panel p-4 rounded-2xl space-y-4 relative overflow-hidden";
+    
+    const hCode = MASTER_TEAMS_POOL[match.homeTeam] || "un";
+    const aCode = MASTER_TEAMS_POOL[match.awayTeam] || "un";
+    
+    el.innerHTML = `
+        <div class="flex justify-between items-center text-[10px] font-bold tracking-widest uppercase text-slate-400 border-b border-white/5 pb-2">
+            <span class="text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded">${match.stage}</span>
+            <span class="font-mono">${match.date}</span>
         </div>
-        <div class="grid grid-cols-12 items-center font-semibold text-sm">
-            <div class="col-span-9 text-white tracking-wide">${match.homeTeam}</div>
-            <div class="col-span-3 text-right font-mono font-black text-slate-200 text-base">${match.homeScore}</div>
-            <div class="col-span-9 text-white tracking-wide mt-1">${match.awayTeam}</div>
-            <div class="col-span-3 text-right font-mono font-black text-slate-200 text-base mt-1">${match.awayScore}</div>
+        <div class="space-y-2.5">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <img src="https://flagcdn.com/w40/${hCode}.png" class="w-6 h-4 rounded object-cover shadow-sm">
+                    <span class="text-sm font-bold text-white tracking-wide">${match.homeTeam}</span>
+                </div>
+                <span class="font-mono font-black text-lg text-white">${match.homeScore}</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <img src="https://flagcdn.com/w40/${aCode}.png" class="w-6 h-4 rounded object-cover shadow-sm">
+                    <span class="text-sm font-bold text-white tracking-wide">${match.awayTeam}</span>
+                </div>
+                <span class="font-mono font-black text-lg text-white">${match.awayScore}</span>
+            </div>
         </div>
     `;
-    return card;
+    return el;
 }
