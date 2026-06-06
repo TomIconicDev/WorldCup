@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>World Cup Family Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body class="bg-[#0b0c16] text-slate-100 antialiased overflow-x-hidden">
+
+    <div id="gate-screen" class="fixed inset-0 z-50 flex flex-col justify-center items-center px-6 transition-all duration-500">
+        <div class="glass-panel w-full max-w-sm p-8 rounded-3xl text-center space-y-6">
+            <div class="space-y-2">
+                <h1 class="text-3xl font-black tracking-tight uppercase bg-gradient-to-r from-teal-400 to-indigo-400 bg-clip-text text-transparent">Family Cup '26</h1>
+                <p class="text-xs text-slate-400">Enter your family access token to unlock</p>
+            </div>
+            
+            <div class="space-y-3">
+                <input type="password" id="access-code" placeholder="Access Code" class="w-full ios-input rounded-2xl px-4 py-3.5 text-center tracking-widest text-lg font-bold outline-none text-white placeholder-slate-600 transition">
+                <input type="text" id="user-name" placeholder="Your Name" class="w-full ios-input rounded-2xl px-4 py-3.5 text-center text-base outline-none text-white placeholder-slate-600 transition hidden">
+            </div>
+
+            <button id="btn-gate" class="w-full ios-btn font-bold text-sm py-4 rounded-2xl transition">
+                Unlock Hub
+            </button>
+        </div>
+    </div>
+
+    <div id="app-screen" class="hidden min-h-screen flex flex-col pb-24">
+        
+        <header class="sticky top-0 z-40 bg-[#0b0c16]/70 backdrop-blur-xl px-6 py-4 flex justify-between items-center border-b border-white/5">
+            <div>
+                <p class="text-[10px] uppercase font-bold tracking-widest text-teal-400" id="user-display">Welcome</p>
+                <h2 id="header-title" class="text-xl font-black text-white tracking-tight">TEAM SELECTION</h2>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="text-[10px] font-mono tracking-wider text-slate-400 uppercase">Live Pipeline</span>
+            </div>
+        </header>
+
+        <main id="view-picker" class="app-view px-6 py-6 space-y-6 flex-1">
+            <div id="picker-zone" class="glass-panel p-6 rounded-3xl text-center space-y-6">
+                <div class="space-y-1">
+                    <h3 class="text-lg font-bold text-white">Draw Your Team</h3>
+                    <p class="text-xs text-slate-400">Your selection will instantly sync and lock out globally.</p>
+                </div>
+
+                <div class="w-full bg-black/40 border border-white/5 rounded-2xl h-28 flex flex-col items-center justify-center relative overflow-hidden">
+                    <div id="picker-display" class="text-2xl font-black tracking-wide text-slate-300">???</div>
+                    <div id="picker-sub" class="text-[10px] text-slate-500 font-mono tracking-widest uppercase mt-1">Ready for Draft</div>
+                </div>
+
+                <button id="btn-draw" class="w-full bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-950 font-black tracking-wider uppercase text-xs py-4 rounded-2xl shadow-xl shadow-teal-500/10 transition active:scale-[0.98]">
+                    Trigger Random Selection
+                </button>
+            </div>
+
+            <div id="locked-zone" class="hidden glass-panel p-8 rounded-3xl text-center space-y-4 border-teal-500/20 bg-teal-950/5">
+                <div class="text-4xl">🏆</div>
+                <h3 class="text-xl font-black text-white">You're Locked In!</h3>
+                <p class="text-xs text-slate-400">Your assigned representative faction:</p>
+                <div id="my-locked-team" class="text-3xl font-black tracking-wider text-teal-400 py-2">TEAM</div>
+                <p class="text-[11px] text-slate-500">Head over to 'My Team' or 'Fixtures' tabs to track your path to glory.</p>
+            </div>
+
+            <div class="space-y-3">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Family Claims Board</h4>
+                <div id="claims-list" class="space-y-2">
+                    </div>
+            </div>
+        </main>
+
+        <main id="view-fixtures" class="app-view hidden px-6 py-6 space-y-4 flex-1">
+            <div id="fixtures-list" class="space-y-3">
+                </div>
+        </main>
+
+        <main id="view-myteam" class="app-view hidden px-6 py-6 space-y-6 flex-1">
+            <div id="no-team-assigned" class="glass-panel p-8 rounded-3xl text-center text-slate-500 text-sm">
+                You must claim a dynamic faction from the "Selection" hub first to initialize diagnostics.
+            </div>
+            
+            <div id="myteam-dashboard" class="hidden space-y-6">
+                <div class="glass-panel p-6 rounded-3xl text-center space-y-2 bg-gradient-to-b from-indigo-950/20 to-transparent">
+                    <span class="text-xs uppercase font-bold tracking-widest text-indigo-400">Assigned Team Squad</span>
+                    <h3 id="dashboard-team-name" class="text-4xl font-black text-white tracking-wide">COUNTRY</h3>
+                </div>
+
+                <div class="space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Your Live Fixtures</h4>
+                    <div id="my-fixtures-list" class="space-y-3">
+                        </div>
+                </div>
+            </div>
+        </main>
+
+        <nav class="fixed bottom-0 left-0 right-0 h-20 bg-[#0b0c16]/80 backdrop-blur-2xl border-t border-white/5 px-6 flex justify-around items-center z-40 pb-4">
+            <button class="nav-tab active flex flex-col items-center space-y-1 text-slate-500" data-target="view-picker" data-title="TEAM SELECTION">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                <span class="text-[10px] font-semibold tracking-wide">Selection</span>
+            </button>
+            <button class="nav-tab flex flex-col items-center space-y-1 text-slate-500" data-target="view-fixtures" data-title="MATCH FIXTURES">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <span class="text-[10px] font-semibold tracking-wide">Fixtures</span>
+            </button>
+            <button class="nav-tab flex flex-col items-center space-y-1 text-slate-500" data-target="view-myteam" data-title="MY TEAM DISPATCH">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
+                <span class="text-[10px] font-semibold tracking-wide">My Team</span>
+            </button>
+        </nav>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
