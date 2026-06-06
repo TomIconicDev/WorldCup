@@ -1,0 +1,63 @@
+/* Core iOS Native Overrides */
+body {
+    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Glassmorphic UI Panel Definitions */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ios-input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.ios-input:focus {
+    border-color: #2dd4bf;
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 20px rgba(45, 212, 191, 0.1);
+}
+
+.ios-btn {
+    background: linear-gradient(135deg, #2dd4bf 0%, #3b82f6 100%);
+    color: #05050a;
+    box-shadow: 0 8px 24px rgba(45, 212, 191, 0.2);
+}
+
+.ios-btn:active {
+    transform: scale(0.97);
+    opacity: 0.9;
+}
+
+/* Tab Navigation Selection */
+.nav-tab.active {
+    color: #2dd4bf !important;
+}
+
+.nav-tab.active svg {
+    filter: drop-shadow(0 0 8px rgba(45, 212, 191, 0.4));
+}
+
+/* Slot Machine Randomizer Reel blur animation effects */
+.blur-roll {
+    animation: textShuffle 0.15s infinite linear;
+}
+
+@keyframes textShuffle {
+    0% { transform: translateY(-10px); filter: blur(4px); opacity: 0.6; }
+    50% { opacity: 0.9; }
+    100% { transform: translateY(10px); filter: blur(4px); opacity: 0.6; }
+}
+
+/* Clean iOS scrolling wrappers */
+::-webkit-scrollbar {
+    display: none;
+}
